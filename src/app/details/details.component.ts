@@ -4,7 +4,6 @@ import {Location} from '@angular/common';
 import {Repository} from '../repository';
 import {RepositoryService} from '../repository.service';
 import {Observable, of} from 'rxjs';
-import {map} from 'rxjs/operators';
 
 @Component({
   selector: 'app-details',
@@ -22,7 +21,6 @@ export class DetailsComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    console.log('details init...');
     const owner = this.route.snapshot.paramMap.get('owner');
     const repo = this.route.snapshot.paramMap.get('repo');
 

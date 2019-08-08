@@ -13,18 +13,23 @@
       <td>Description</td>
       <td>Licence</td>
       <td>Link</td>
-      <td>Starred?</td>
       <td>Language</td>
       <td>Contributors</td>
       <td>Stars</td>
       <td>Forks</td>
       <td>Issues</td>
+      <td>Starred?</td>
     </tr>
     <tr>
       <td>{{ repo.name }}</td>
       <td>{{ repo.description | slice:0:100 }}</td>
       <td>{{ repo.licence }}</td>
       <td><a [href]="repo.link">{{ repo.link }}</a></td>
+      <td>{{ repo.language }}</td>
+      <td>{{ repo.contributors }}</td>
+      <td>{{ repo.stars }}</td>
+      <td>{{ repo.forks}}</td>
+      <td>{{ repo.issues }}</td>
       <td>
         <span *ngIf="repo.starred; else notStarred">
           Yes. <button (click)="repo.starred = false; unstar(repo)">Unstar</button>
@@ -33,11 +38,6 @@
           No. <button  (click)="repo.starred = true; star(repo)">Star</button>
         </ng-template>
       </td>
-      <td>{{ repo.language }}</td>
-      <td>{{ repo.contributors }}</td>
-      <td>{{ repo.stars }}</td>
-      <td>{{ repo.forks}}</td>
-      <td>{{ repo.issues }}</td>
     </tr>
   </table>
 </div>
