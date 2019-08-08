@@ -1,0 +1,24 @@
+<h1>
+  Repositories
+</h1>
+
+<input #searchBox id="search-box" placeholder="repository name" autocomplete="Off" (input)="search(searchBox.value)" />
+
+
+
+
+    <ul *ngIf="starredRepositories">
+      <li *ngFor="let repo of repositories$ | async" >
+        <a routerLink="/details/{{repo.name}}">
+          {{repo.id}}
+          {{repo.name}}
+          {{repo.description}}
+          {{repo.licence}}
+
+          <span *ngIf="repositoryService.isStarred(repo, starredRepositories) ">STARRED</span>
+        </a>
+      </li>
+    </ul>
+
+
+

@@ -1,0 +1,29 @@
+<h1>
+  Repository details
+</h1>
+
+
+<nav>
+  <a routerLink="/list"><< Github repositories</a>
+</nav>
+
+<div *ngIf="repo && !!starredRepositories; else loading">
+  {{ repo.id }}
+  {{ repo.name }}
+  {{ repo.description }}
+  {{ repo.starred }}
+
+  <span *ngIf="repositoryService.isStarred(repo, starredRepositories); else notStarred">
+    <button (click)="unstar(repo)">Unstar</button>
+  </span>
+  <ng-template #notStarred>
+    <button  (click)="star(repo)">Star</button>
+  </ng-template>
+
+</div>
+<ng-template #loading>
+  Loading...
+</ng-template>
+
+
+
