@@ -3,6 +3,8 @@ import {ActivatedRoute} from '@angular/router';
 import {Location} from '@angular/common';
 import {Repository} from '../repository';
 import {RepositoryService} from '../repository.service';
+import {Observable, of} from 'rxjs';
+import {map} from 'rxjs/operators';
 
 @Component({
   selector: 'app-details',
@@ -11,9 +13,7 @@ import {RepositoryService} from '../repository.service';
 })
 export class DetailsComponent implements OnInit {
 
-  starredRepositories: Repository[];
-
-  @Input() repo: Repository;
+  repository$: Observable<Repository>;
 
   constructor(
     private route: ActivatedRoute,
@@ -22,28 +22,18 @@ export class DetailsComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.repositoryService.getStarredRepositories().subscribe(
-      repos =>  this.starredRepositories = repos,
-    );
-
+    console.log('details init...');
     const owner = this.route.snapshot.paramMap.get('owner');
     const repo = this.route.snapshot.paramMap.get('repo');
 
-    this.repositoryService.getRepository(owner + '/' + repo)
-      .subscribe(repository => this.repo = repository);
+    this.repository$ = this.repositoryService.getRepository(owner + '/' + repo);
   }
 
   unstar(repository: Repository) {
     this.repositoryService.unstar(repository.name);
-
-    const index = this.starredRepositories.findIndex(repo => repo.name === repository.name);
-    if (index !== -1) {
-      this.starredRepositories.splice(index, 1);
-    }
   }
 
   star(repository: Repository) {
     this.repositoryService.star(repository.name);
-    this.starredRepositories.push(repository);
   }
 }

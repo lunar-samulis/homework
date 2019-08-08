@@ -2,23 +2,25 @@
   Repositories
 </h1>
 
-<input #searchBox id="search-box" placeholder="repository name" autocomplete="Off" (input)="search(searchBox.value)" />
+<input #searchBox id="search-box" placeholder="search" autocomplete="Off" (input)="search(searchBox.value)" />
+
+<ul *ngIf="repositories$ | async as repos; else loading">
+  <li *ngFor="let repo of repos" >
+    <a routerLink="/details/{{repo.name}}">
+      {{repo.id}}
+      {{repo.name}}
+      {{repo.description}}
+      {{repo.licence}}
+      {{repo.contributors}}
+      {{repo.starred}}
+
+      <span *ngIf="repo.starred">[* STARRED]</span>
+    </a>
+  </li>
+</ul>
 
 
-
-
-    <ul *ngIf="starredRepositories">
-      <li *ngFor="let repo of repositories$ | async" >
-        <a routerLink="/details/{{repo.name}}">
-          {{repo.id}}
-          {{repo.name}}
-          {{repo.description}}
-          {{repo.licence}}
-
-          <span *ngIf="repositoryService.isStarred(repo, starredRepositories) ">STARRED</span>
-        </a>
-      </li>
-    </ul>
-
-
+<ng-template #loading>
+  Loading...
+</ng-template>
 

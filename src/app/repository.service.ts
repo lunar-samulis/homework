@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import {Observable, of} from 'rxjs';
+import {forkJoin, from, Observable, of} from 'rxjs';
 import {Repository} from './repository';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
-import {map} from 'rxjs/operators';
+import {map, flatMap, mergeMap, toArray} from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -10,32 +10,82 @@ import {map} from 'rxjs/operators';
 export class RepositoryService {
 
   private baseUri = 'https://api.github.com';
+  private searchMaxResults = '20';
 
   constructor(private http: HttpClient) { }
 
-  searchRepositories(term: string): Observable<Repository[]> {
+   searchRepositories(term: string): Observable<Repository[]> { // todo naming
+    return forkJoin(this.searchPlainRepositories(term), this.getStarredRepositories()).pipe(
+      map(([foundRepositories, starredRepositories]) => {
+        return foundRepositories.map(repo => this.adjustStar(repo, starredRepositories));
+      })
+    ).pipe(
+      mergeMap(repositories => from(repositories).pipe(
+        mergeMap(repo => this.adjustContributors(repo)),
+        toArray()
+      ))
+    );
+  }
+
+  private searchPlainRepositories(term: string): Observable<Repository[]> {
     if (!term.trim() || term.trim().length < 2) {
       return of([]);
     }
 
     // @ts-ignore
-    return this.http.get(this.baseUri + '/search/repositories?q=' + term.trim() + '+language:javascript&sort=stars&order=desc',
-      {headers: this.getAuthHeaders()}).pipe(
+    return this.http.get(
+      this.baseUri + '/search/repositories?q=' + term.trim() + '&sort=stars&order=desc&per_page=' + this.searchMaxResults,
+      {headers: this.getAuthHeaders()}
+      ).pipe(
         map(object => object.items.map( repo => this.toRepository(repo))),
     );
   }
 
+  private adjustContributors(repository: Repository): Observable<Repository> {
+    return this.http.get(
+      this.baseUri + '/repos/' + repository.name + '/contributors?per_page=1',
+      {observe: 'response', headers: this.getAuthHeaders()}
+      ).pipe(
+      map(response => { return {... repository, contributors: this.extractLastPage(response.headers.get('Link'))}; })
+    );
+  }
+
+  private extractLastPage(linkHeader: string): number {
+    const rx = /.*=(.*)>; rel="last"$/g;
+    const captures = rx.exec(linkHeader);
+
+    return captures !== null ? parseInt(captures[1], 10) : 0;
+  }
+
+  getRepository(fullName: string): Observable<Repository> {
+    console.log('getRepository,,,');
+    return this.getPlainRepository(fullName).pipe(
+      flatMap(repo => this.getStarredRepositories().pipe(
+        flatMap(repositories => this.adjustContributors(this.adjustStar(repo, repositories)))
+      ))
+    );
+  }
+
   getStarredRepositories(): Observable<Repository[]> {
+    console.log('fetching starrred repos...');
     // @ts-ignore
-    return this.http.get(this.baseUri + '/user/starred?t=' + Math.random() /*todo timestamp*/, {headers: this.getAuthHeaders()}).pipe(
+    return this.http.get(this.baseUri + '/user/starred?t=' + Math.random(), {headers: this.getAuthHeaders()}).pipe(
       map(object => object.map(repo => this.toRepository(repo)))
     );
   }
 
-  getRepository(fullName: string): Observable<Repository> {
+  private getPlainRepository(fullName: string): Observable<Repository> {
     return this.http.get(this.baseUri + '/repos/' + fullName, {headers: this.getAuthHeaders()}).pipe(
-      map(repo => this.toRepository(repo))
+      map(data => this.toRepository(data))
     );
+  }
+
+  private adjustStar(repository: Repository, starredRepositories: Repository[]): Repository {
+    if (starredRepositories.filter(r => r.name === repository.name).length === 1) {
+        return {... repository, starred: true};
+    }
+
+    return repository;
   }
 
   private toRepository(repo) {
@@ -71,13 +121,13 @@ export class RepositoryService {
       //   'X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization'
   })
       .append('Content-Type', 'application/json')
-      .append('Authorization', 'Basic ' + btoa('user:password')); // todo move to config
+      .append('Authorization', 'Basic ' + btoa('')); // todo move to config
       // .append('Cache-Control', 'no-cache, no-store, must-revalidate, post-check=0, pre-check=0')
       // .append('Pragma', 'no-cache')
       // .append('Expires', '0');
   }
 
-  isStarred(repository: Repository, starredRepositories: Repository[]): boolean {
+  private isStarred(repository: Repository, starredRepositories: Repository[]): boolean {
     return starredRepositories.findIndex(repo => repo.name === repository.name) !== -1;
   }
 
