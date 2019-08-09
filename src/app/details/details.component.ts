@@ -28,10 +28,12 @@ export class DetailsComponent implements OnInit {
   }
 
   unstar(repository: Repository) {
+    repository.starred = false;
     this.repositoryService.unstar(repository.name);
   }
 
   star(repository: Repository) {
+    repository.starred = true;
     this.repositoryService.star(repository.name);
   }
 }

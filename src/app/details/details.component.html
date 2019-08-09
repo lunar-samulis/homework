@@ -32,10 +32,10 @@
       <td>{{ repo.issues }}</td>
       <td>
         <span *ngIf="repo.starred; else notStarred">
-          Yes. <button (click)="repo.starred = false; unstar(repo)">Unstar</button>
+          YES <button (click)="unstar(repo)">Unstar</button>
         </span>
         <ng-template #notStarred>
-          No. <button  (click)="repo.starred = true; star(repo)">Star</button>
+          no <button  (click)="star(repo)">Star</button>
         </ng-template>
       </td>
     </tr>

@@ -18,7 +18,7 @@ export class RepositoryService {
    searchRepositories(term: string): Observable<Repository[]> {
     const repositories = forkJoin(this.searchPlainRepositories(term), this.getStarredRepositories()).pipe(
       map(([foundRepositories, starredRepositories]) => {
-        return foundRepositories.map(repo => this.adjustStar(repo, starredRepositories));
+        return foundRepositories.map(repo => this.applyStar(repo, starredRepositories));
       })
     );
     return this.applyContributorsOnList(repositories);
@@ -65,7 +65,7 @@ export class RepositoryService {
   getRepository(fullName: string): Observable<Repository> {
     return this.getPlainRepository(fullName).pipe(
       flatMap(repo => this.getStarredRepositories().pipe(
-        flatMap(starredRepositories => this.applyContributors(this.adjustStar(repo, starredRepositories)))
+        flatMap(starredRepositories => this.applyContributors(this.applyStar(repo, starredRepositories)))
       ))
     );
   }
@@ -82,7 +82,7 @@ export class RepositoryService {
     );
   }
 
-  private adjustStar(repository: Repository, starredRepositories: Repository[]): Repository {
+  private applyStar(repository: Repository, starredRepositories: Repository[]): Repository {
     if (starredRepositories.filter(r => r.name === repository.name).length === 1) {
         return {... repository, starred: true};
     }
